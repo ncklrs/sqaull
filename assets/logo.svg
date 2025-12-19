@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" fill="none">
+  <defs>
+    <linearGradient id="storm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="50%" style="stop-color:#6366F1"/>
+      <stop offset="100%" style="stop-color:#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FBBF24"/>
+      <stop offset="100%" style="stop-color:#F59E0B"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Storm cloud background shape -->
+  <path d="M30 55 Q25 45 35 40 Q30 30 45 30 Q50 20 65 25 Q75 15 90 25 Q100 22 105 35 Q115 30 115 45 Q125 50 115 60 Q118 70 100 68 L40 68 Q25 70 30 55Z"
+        fill="url(#storm)" opacity="0.9"/>
+
+  <!-- Lightning bolt -->
+  <path d="M72 28 L58 50 L70 50 L52 72 L62 52 L50 52 L68 28Z"
+        fill="url(#bolt)" filter="url(#glow)"/>
+
+  <!-- Text: squall -->
+  <text x="135" y="62" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="48" font-weight="800" fill="url(#storm)">
+    squall
+  </text>
+
+  <!-- Tagline -->
+  <text x="135" y="82" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500" fill="#64748B">
+    SQL that hits different
+  </text>
+</svg>

@@ -40,9 +40,87 @@ export * from './compiler/dialects';
 
 // Builder exports
 export { sqw } from './builder/template';
-export { sq, QueryBuilder } from './builder/chain';
+export { sq, QueryBuilder, createQueryBuilder } from './builder/chain';
 export { Query } from './builder/query';
 
 // Type safety exports
 export { defineSchema } from './types/schema';
 export type * from './types/inference';
+
+// Relations exports
+export {
+  hasOne,
+  hasMany,
+  belongsTo,
+  manyToMany,
+  // Gen Alpha aliases
+  got,
+  stacked,
+  simps,
+  linked,
+  RelationLoader,
+  parseIncludes,
+} from './relations';
+export type {
+  Relation,
+  RelationType,
+  HasOneRelation,
+  HasManyRelation,
+  BelongsToRelation,
+  ManyToManyRelation,
+  TableRelations,
+  SchemaRelations,
+  EagerLoadOptions,
+  EagerLoadRequest,
+} from './relations';
+
+// Database execution layer exports
+export { createClient, Client } from './db/client';
+export {
+  PostgresAdapter,
+  createPostgresAdapter,
+  MySQLAdapter,
+  createMySQLAdapter,
+  SQLiteAdapter,
+  createSQLiteAdapter,
+} from './db/adapters';
+export {
+  DatabaseError,
+  ConnectionError,
+  TransactionError,
+} from './db/adapter';
+export type {
+  QueryResult,
+  ConnectionConfig,
+  DatabaseAdapter,
+  Transaction,
+  CreateConnectionOptions,
+} from './db/types';
+
+// Migration system exports
+export {
+  createMigration,
+  defineMigration,
+  createMigrationRunner,
+  MigrationRunner,
+  MigrationBuilder,
+  TableBuilder,
+  ColumnBuilder,
+  generateSQL,
+  generateMigrationSQL,
+  // Gen Alpha aliases
+  glow,
+  evolve,
+} from './migrations';
+export type {
+  ColumnType,
+  ColumnDefinition,
+  IndexDefinition,
+  TableDefinition,
+  MigrationOperation,
+  Migration,
+  MigrationRecord,
+  MigrationRunnerOptions,
+  MigrationStatus,
+  MigrationResult,
+} from './migrations';

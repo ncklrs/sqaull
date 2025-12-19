@@ -24,6 +24,11 @@ import {
   OrderByClause,
   LimitClause,
   OffsetClause,
+  StatementType,
+  SetClause,
+  DeleteClause,
+  ReturningClause,
+  WithClause,
 } from './types.js';
 import { lex } from './lexer.js';
 
@@ -51,7 +56,7 @@ function parseFrom(token: Token): FromClause {
  */
 function parseAggregate(
   part: string
-): { type: 'aggregate'; function: AggregateType; column: string } | null {
+): { type: 'aggregate'; function: AggregateType; column: string; alias?: string } | null {
   const aggregateFunctions: Record<string, AggregateType> = {
     sum: AggregateType.SUM,
     cnt: AggregateType.COUNT,
@@ -62,11 +67,26 @@ function parseAggregate(
 
   for (const [prefix, aggType] of Object.entries(aggregateFunctions)) {
     if (part.startsWith(`${prefix}:`)) {
-      const column = part.slice(prefix.length + 1);
+      const rest = part.slice(prefix.length + 1);
+
+      // Check for alias: sum:total/revenue -> column: total, alias: revenue
+      const slashIndex = rest.indexOf('/');
+      if (slashIndex > 0) {
+        const column = rest.slice(0, slashIndex);
+        const alias = rest.slice(slashIndex + 1);
+        return {
+          type: 'aggregate',
+          function: aggType,
+          column,
+          alias,
+        };
+      }
+
+      // No alias
       return {
         type: 'aggregate',
         function: aggType,
-        column,
+        column: rest,
       };
     }
   }
@@ -131,20 +151,26 @@ function parseOperator(op: string): Operator {
 /**
  * Parses a value (string or number)
  */
-function parseValue(value: string): string | number {
+function parseValue(value: string): string | number | boolean {
+  const trimmed = value.trim();
+
+  // Check for boolean values
+  if (trimmed.toLowerCase() === 'true') return true;
+  if (trimmed.toLowerCase() === 'false') return false;
+
   // Try to parse as number
-  const num = Number(value);
-  if (!isNaN(num) && value.trim() !== '') {
+  const num = Number(trimmed);
+  if (!isNaN(num) && trimmed !== '') {
     return num;
   }
   // Remove quotes if present
   if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
   ) {
-    return value.slice(1, -1);
+    return trimmed.slice(1, -1);
   }
-  return value;
+  return trimmed;
 }
 
 /**
@@ -436,6 +462,112 @@ function parseOn(token: Token): Condition {
 }
 
 /**
+ * Parses an INSERT token - format: ins:tablename
+ */
+function parseInsert(token: Token): { table: string } {
+  return { table: token.value };
+}
+
+/**
+ * Parses COLUMNS token - format: cols:col1,col2,col3
+ */
+function parseColumns(token: Token): string[] {
+  return token.value.split(',').map((c) => c.trim());
+}
+
+/**
+ * Parses VALUES token - format: vals:val1,val2,val3
+ */
+function parseValues(token: Token): (string | number | boolean | null)[] {
+  return token.value.split(',').map((v) => {
+    const trimmed = v.trim();
+    // null
+    if (trimmed.toLowerCase() === 'null') return null;
+    // boolean
+    if (trimmed.toLowerCase() === 'true') return true;
+    if (trimmed.toLowerCase() === 'false') return false;
+    // number
+    const num = Number(trimmed);
+    if (!isNaN(num) && trimmed !== '') return num;
+    // string (remove quotes if present)
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return trimmed.slice(1, -1);
+    }
+    return trimmed;
+  });
+}
+
+/**
+ * Parses UPDATE token - format: upd:tablename
+ */
+function parseUpdate(token: Token): { table: string } {
+  return { table: token.value };
+}
+
+/**
+ * Parses SET token - format: set:col1=val1,col2=val2
+ */
+function parseSet(token: Token): SetClause {
+  const assignments = token.value.split(',').map((pair) => {
+    const eqIndex = pair.indexOf('=');
+    if (eqIndex === -1) {
+      throw new ParserError(`Invalid SET assignment: ${pair}`, token.position);
+    }
+    const column = pair.slice(0, eqIndex).trim();
+    const valueStr = pair.slice(eqIndex + 1).trim();
+
+    // Parse the value
+    let value: string | number | boolean | null;
+    if (valueStr.toLowerCase() === 'null') {
+      value = null;
+    } else if (valueStr.toLowerCase() === 'true') {
+      value = true;
+    } else if (valueStr.toLowerCase() === 'false') {
+      value = false;
+    } else {
+      const num = Number(valueStr);
+      if (!isNaN(num) && valueStr !== '') {
+        value = num;
+      } else if ((valueStr.startsWith('"') && valueStr.endsWith('"')) ||
+                 (valueStr.startsWith("'") && valueStr.endsWith("'"))) {
+        value = valueStr.slice(1, -1);
+      } else {
+        value = valueStr;
+      }
+    }
+
+    return { column, value };
+  });
+
+  return { assignments };
+}
+
+/**
+ * Parses DELETE token - format: del:tablename
+ */
+function parseDelete(token: Token): DeleteClause {
+  return { table: token.value };
+}
+
+/**
+ * Parses RETURNING token - format: ret:col1,col2 or ret:*
+ */
+function parseReturning(token: Token): ReturningClause {
+  if (token.value === '*') {
+    return { columns: '*' };
+  }
+  return { columns: token.value.split(',').map((c) => c.trim()) };
+}
+
+/**
+ * Parses WITH token for eager loading - format: with:posts,author or fam:posts
+ */
+function parseWith(token: Token): WithClause {
+  return { relations: token.value.split(',').map((r) => r.trim()) };
+}
+
+/**
  * Parse tokens or query string into a QueryAST
  *
  * @param input - Array of tokens from the lexer OR a sqwind query string
@@ -546,6 +678,100 @@ export function parse(input: Token[] | string): QueryAST {
           'ON clause must follow a JOIN clause',
           token.position
         );
+
+      case TokenType.INSERT: {
+        if (ast.insert) {
+          throw new ParserError('Duplicate INSERT clause', token.position);
+        }
+        ast.type = StatementType.INSERT;
+        const insertInfo = parseInsert(token);
+        // Look ahead for COLUMNS and VALUES
+        const columns: string[] = [];
+        let values: (string | number | boolean | null)[] = [];
+
+        // Check next tokens for cols: and vals:
+        while (i + 1 < tokens.length) {
+          const nextToken = tokens[i + 1];
+          if (nextToken.type === TokenType.COLUMNS) {
+            columns.push(...parseColumns(nextToken));
+            i++;
+          } else if (nextToken.type === TokenType.VALUES) {
+            values = parseValues(nextToken);
+            i++;
+          } else {
+            break;
+          }
+        }
+
+        ast.insert = {
+          table: insertInfo.table,
+          columns,
+          values,
+        };
+        break;
+      }
+
+      case TokenType.COLUMNS:
+        // COLUMNS should be handled by INSERT case
+        throw new ParserError(
+          'COLUMNS clause must follow an INSERT clause',
+          token.position
+        );
+
+      case TokenType.VALUES:
+        // VALUES should be handled by INSERT case
+        throw new ParserError(
+          'VALUES clause must follow an INSERT clause',
+          token.position
+        );
+
+      case TokenType.UPDATE: {
+        if (ast.update) {
+          throw new ParserError('Duplicate UPDATE clause', token.position);
+        }
+        ast.type = StatementType.UPDATE;
+        ast.update = parseUpdate(token);
+        break;
+      }
+
+      case TokenType.SET: {
+        if (ast.set) {
+          throw new ParserError('Duplicate SET clause', token.position);
+        }
+        if (!ast.update) {
+          throw new ParserError(
+            'SET clause must follow an UPDATE clause',
+            token.position
+          );
+        }
+        ast.set = parseSet(token);
+        break;
+      }
+
+      case TokenType.DELETE: {
+        if (ast.delete) {
+          throw new ParserError('Duplicate DELETE clause', token.position);
+        }
+        ast.type = StatementType.DELETE;
+        ast.delete = parseDelete(token);
+        break;
+      }
+
+      case TokenType.RETURNING: {
+        if (ast.returning) {
+          throw new ParserError('Duplicate RETURNING clause', token.position);
+        }
+        ast.returning = parseReturning(token);
+        break;
+      }
+
+      case TokenType.WITH: {
+        if (ast.with) {
+          throw new ParserError('Duplicate WITH clause', token.position);
+        }
+        ast.with = parseWith(token);
+        break;
+      }
 
       default:
         throw new ParserError(

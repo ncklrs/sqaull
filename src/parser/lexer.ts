@@ -8,8 +8,12 @@ import { Token, TokenType } from './types.js';
 
 /**
  * Maps sqwind utility prefixes to token types
+ *
+ * Supports both OG syntax and Gen Alpha slang (no cap fr fr)
  */
 const TOKEN_MAP: Record<string, TokenType> = {
+  // ===== OG SYNTAX (for the boomers) =====
+  // SELECT tokens
   from: TokenType.FROM,
   sel: TokenType.SELECT,
   whr: TokenType.WHERE,
@@ -20,6 +24,45 @@ const TOKEN_MAP: Record<string, TokenType> = {
   hav: TokenType.HAVING,
   join: TokenType.JOIN,
   on: TokenType.ON,
+  // INSERT tokens
+  ins: TokenType.INSERT,
+  cols: TokenType.COLUMNS,
+  vals: TokenType.VALUES,
+  // UPDATE tokens
+  upd: TokenType.UPDATE,
+  set: TokenType.SET,
+  // DELETE token
+  del: TokenType.DELETE,
+  // RETURNING token
+  ret: TokenType.RETURNING,
+  // Eager loading token
+  with: TokenType.WITH,
+
+  // ===== GEN ALPHA SLANG (bussin fr fr) =====
+  // SELECT tokens - main character energy
+  main: TokenType.FROM,      // main character table
+  slay: TokenType.SELECT,    // slay those columns
+  sus: TokenType.WHERE,      // these rows are sus, filter em
+  vibe: TokenType.ORDER,     // vibecheck the order
+  bet: TokenType.LIMIT,      // bet, only this many
+  skip: TokenType.OFFSET,    // skip these (also valid: off)
+  squad: TokenType.GROUP,    // squad up by these columns
+  tea: TokenType.HAVING,     // spill the tea (having condition)
+  link: TokenType.JOIN,      // link up with another table
+  match: TokenType.ON,       // matching condition for the link
+  // INSERT tokens - no cap
+  nocap: TokenType.INSERT,   // no cap, inserting for real
+  drip: TokenType.COLUMNS,   // that column drip
+  fire: TokenType.VALUES,    // fire values going in
+  // UPDATE tokens - glow up
+  glow: TokenType.UPDATE,    // glow up those values
+  rizz: TokenType.SET,       // rizz up with these assignments
+  // DELETE token - yeet into the void
+  yeet: TokenType.DELETE,    // yeet this data
+  // RETURNING token - flex on em
+  flex: TokenType.RETURNING, // flex those results back
+  // Eager loading - bring the fam
+  fam: TokenType.WITH,       // bring the fam (related data)
 };
 
 /**

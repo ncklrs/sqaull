@@ -10,9 +10,12 @@ import type {
   Condition,
   JoinClause,
   OrderBy,
+  SetClause,
+  ReturningClause,
 } from '../parser/types';
 import {
   Operator,
+  StatementType,
 } from '../parser/types';
 import {
   Dialect,
@@ -77,6 +80,27 @@ export function compile(ast: QueryAST, options: CompilerOptions = {}): CompiledQ
     placeholderStyle,
   };
 
+  // Route to appropriate compiler based on statement type
+  switch (ast.type) {
+    case StatementType.INSERT:
+      return compileInsertStatement(ast, context, options);
+    case StatementType.UPDATE:
+      return compileUpdateStatement(ast, context, options);
+    case StatementType.DELETE:
+      return compileDeleteStatement(ast, context, options);
+    default:
+      return compileSelectStatement(ast, context, options);
+  }
+}
+
+/**
+ * Compile SELECT statement
+ */
+function compileSelectStatement(
+  ast: QueryAST,
+  context: CompilerContext,
+  options: CompilerOptions
+): CompiledQuery {
   const parts: string[] = [];
 
   // Build SELECT clause
@@ -135,6 +159,160 @@ export function compile(ast: QueryAST, options: CompilerOptions = {}): CompiledQ
     sql,
     params: context.params,
   };
+}
+
+/**
+ * Compile INSERT statement
+ */
+function compileInsertStatement(
+  ast: QueryAST,
+  context: CompilerContext,
+  options: CompilerOptions
+): CompiledQuery {
+  const parts: string[] = [];
+
+  if (!ast.insert) {
+    throw new Error('INSERT statement requires insert clause');
+  }
+
+  const keyword = formatKeyword('INSERT INTO', context.keywordCase);
+  const tableName = context.tablePrefix + ast.insert.table;
+  const table = maybeQuoteIdentifier(tableName, context);
+
+  let insertClause = `${keyword} ${table}`;
+
+  // Add columns if specified
+  if (ast.insert.columns.length > 0) {
+    const cols = ast.insert.columns.map((c) => maybeQuoteIdentifier(c, context));
+    insertClause += ` (${cols.join(', ')})`;
+  }
+
+  parts.push(insertClause);
+
+  // Add VALUES
+  if (ast.insert.values.length > 0) {
+    const valuesKeyword = formatKeyword('VALUES', context.keywordCase);
+    const values = ast.insert.values.map((v) => addParam(v, context));
+    parts.push(`${valuesKeyword} (${values.join(', ')})`);
+  }
+
+  // Add RETURNING clause if present
+  if (ast.returning) {
+    parts.push(compileReturning(ast.returning, context));
+  }
+
+  const sql = options.pretty ? parts.join('\n') : parts.join(' ');
+
+  return {
+    sql,
+    params: context.params,
+  };
+}
+
+/**
+ * Compile UPDATE statement
+ */
+function compileUpdateStatement(
+  ast: QueryAST,
+  context: CompilerContext,
+  options: CompilerOptions
+): CompiledQuery {
+  const parts: string[] = [];
+
+  if (!ast.update) {
+    throw new Error('UPDATE statement requires update clause');
+  }
+
+  const keyword = formatKeyword('UPDATE', context.keywordCase);
+  const tableName = context.tablePrefix + ast.update.table;
+  const table = maybeQuoteIdentifier(tableName, context);
+
+  parts.push(`${keyword} ${table}`);
+
+  // Add SET clause
+  if (ast.set) {
+    parts.push(compileSet(ast.set, context));
+  }
+
+  // Add WHERE clause
+  if (ast.where) {
+    parts.push(compileWhere(ast.where.condition, context));
+  }
+
+  // Add RETURNING clause if present
+  if (ast.returning) {
+    parts.push(compileReturning(ast.returning, context));
+  }
+
+  const sql = options.pretty ? parts.join('\n') : parts.join(' ');
+
+  return {
+    sql,
+    params: context.params,
+  };
+}
+
+/**
+ * Compile DELETE statement
+ */
+function compileDeleteStatement(
+  ast: QueryAST,
+  context: CompilerContext,
+  options: CompilerOptions
+): CompiledQuery {
+  const parts: string[] = [];
+
+  if (!ast.delete) {
+    throw new Error('DELETE statement requires delete clause');
+  }
+
+  const keyword = formatKeyword('DELETE FROM', context.keywordCase);
+  const tableName = context.tablePrefix + ast.delete.table;
+  const table = maybeQuoteIdentifier(tableName, context);
+
+  parts.push(`${keyword} ${table}`);
+
+  // Add WHERE clause
+  if (ast.where) {
+    parts.push(compileWhere(ast.where.condition, context));
+  }
+
+  // Add RETURNING clause if present
+  if (ast.returning) {
+    parts.push(compileReturning(ast.returning, context));
+  }
+
+  const sql = options.pretty ? parts.join('\n') : parts.join(' ');
+
+  return {
+    sql,
+    params: context.params,
+  };
+}
+
+/**
+ * Compile SET clause for UPDATE
+ */
+function compileSet(setClause: SetClause, context: CompilerContext): string {
+  const keyword = formatKeyword('SET', context.keywordCase);
+  const assignments = setClause.assignments.map((a) => {
+    const col = maybeQuoteIdentifier(a.column, context);
+    const val = addParam(a.value, context);
+    return `${col} = ${val}`;
+  });
+  return `${keyword} ${assignments.join(', ')}`;
+}
+
+/**
+ * Compile RETURNING clause
+ */
+function compileReturning(returning: ReturningClause, context: CompilerContext): string {
+  const keyword = formatKeyword('RETURNING', context.keywordCase);
+  if (returning.columns === '*') {
+    return `${keyword} *`;
+  }
+  const cols = returning.columns.map((c) => maybeQuoteIdentifier(c, context));
+  return `${keyword} ${cols.join(', ')}`;
 }
 
 /**
@@ -232,12 +410,23 @@ function compileCondition(condition: Condition, context: CompilerContext): strin
  * Compile comparison condition
  */
 function compileComparison(
-  condition: { type: 'comparison'; left: string; operator: Operator; right: string | number },
+  condition: { type: 'comparison'; left: string; operator: Operator; right: string | number | boolean },
   context: CompilerContext
 ): string {
   const column = maybeQuoteIdentifier(condition.left, context);
   const operator = operatorToSQL(condition.operator);
-  const value = addParam(condition.right, context);
+
+  // Check if right side is a column reference (contains a dot like "table.column")
+  // If it's a string with a dot, treat it as a column reference, otherwise as a value
+  let value: string;
+  if (typeof condition.right === 'string' && condition.right.includes('.')) {
+    // Treat as column reference (e.g., "orders.user_id")
+    value = maybeQuoteIdentifier(condition.right, context);
+  } else {
+    // Treat as a value to parameterize
+    value = addParam(condition.right, context);
+  }
+
   return `${column} ${operator} ${value}`;
 }
 
@@ -245,7 +434,7 @@ function compileComparison(
  * Compile IN condition
  */
 function compileIn(
-  condition: { type: 'in'; column: string; values: (string | number)[]; negated: boolean },
+  condition: { type: 'in'; column: string; values: (string | number | boolean)[]; negated: boolean },
   context: CompilerContext
 ): string {
   const column = maybeQuoteIdentifier(condition.column, context);
@@ -286,7 +475,7 @@ function operatorToSQL(operator: Operator): string {
     case Operator.EQ:
       return '=';
     case Operator.NEQ:
-      return '<>';
+      return '!=';
     case Operator.LIKE:
       return 'LIKE';
   }
@@ -328,10 +517,7 @@ function compileOrderBy(orders: OrderBy[], context: CompilerContext): string {
  */
 function compileLimit(limit: number, context: CompilerContext): string {
   const keyword = formatKeyword('LIMIT', context.keywordCase);
-  if (context.parameterized) {
-    const placeholder = addParam(limit, context);
-    return `${keyword} ${placeholder}`;
-  }
+  // Always use literal value for LIMIT (not parameterized)
   return `${keyword} ${limit}`;
 }
 
@@ -340,10 +526,7 @@ function compileLimit(limit: number, context: CompilerContext): string {
  */
 function compileOffset(offset: number, context: CompilerContext): string {
   const keyword = formatKeyword('OFFSET', context.keywordCase);
-  if (context.parameterized) {
-    const placeholder = addParam(offset, context);
-    return `${keyword} ${placeholder}`;
-  }
+  // Always use literal value for OFFSET (not parameterized)
   return `${keyword} ${offset}`;
 }
 

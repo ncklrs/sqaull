@@ -548,4 +548,287 @@ describe('compiler', () => {
       expect(result.params).toContain(-100.50);
     });
   });
+
+  describe('INSERT statements', () => {
+    it('compiles basic insert with columns and values', () => {
+      const ast = parse('ins:users cols:name,email vals:john,john@example.com');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name, email) VALUES ($1, $2)');
+      expect(result.params).toEqual(['john', 'john@example.com']);
+    });
+
+    it('compiles insert with numeric values', () => {
+      const ast = parse('ins:products cols:name,price,quantity vals:Widget,29.99,100');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO products (name, price, quantity) VALUES ($1, $2, $3)');
+      expect(result.params).toEqual(['Widget', 29.99, 100]);
+    });
+
+    it('compiles insert with null values', () => {
+      const ast = parse('ins:users cols:name,email,phone vals:john,john@test.com,null');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name, email, phone) VALUES ($1, $2, $3)');
+      expect(result.params).toEqual(['john', 'john@test.com', null]);
+    });
+
+    it('compiles insert with boolean values', () => {
+      const ast = parse('ins:users cols:name,active,verified vals:john,true,false');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name, active, verified) VALUES ($1, $2, $3)');
+      expect(result.params).toEqual(['john', true, false]);
+    });
+
+    it('compiles insert with RETURNING clause', () => {
+      const ast = parse('ins:users cols:name,email vals:john,john@test.com ret:id');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id');
+      expect(result.params).toEqual(['john', 'john@test.com']);
+    });
+
+    it('compiles insert with RETURNING *', () => {
+      const ast = parse('ins:users cols:name vals:john ret:*');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name) VALUES ($1) RETURNING *');
+    });
+
+    it('compiles insert with RETURNING multiple columns', () => {
+      const ast = parse('ins:users cols:name,email vals:john,john@test.com ret:id,created_at');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, created_at');
+    });
+
+    it('uses MySQL placeholders for insert', () => {
+      const ast = parse('ins:users cols:name,email vals:john,john@test.com');
+      const result = compile(ast, { dialect: Dialect.MYSQL });
+      expect(result.sql).toBe('INSERT INTO users (name, email) VALUES (?, ?)');
+      expect(result.params).toEqual(['john', 'john@test.com']);
+    });
+  });
+
+  describe('UPDATE statements', () => {
+    it('compiles basic update', () => {
+      const ast = parse('upd:users set:name=john');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET name = $1');
+      expect(result.params).toEqual(['john']);
+    });
+
+    it('compiles update with multiple SET values', () => {
+      const ast = parse('upd:users set:name=john,email=john@test.com');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET name = $1, email = $2');
+      expect(result.params).toEqual(['john', 'john@test.com']);
+    });
+
+    it('compiles update with WHERE clause', () => {
+      const ast = parse('upd:users set:status=active whr:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET status = $1 WHERE id = $2');
+      expect(result.params).toEqual(['active', 1]);
+    });
+
+    it('compiles update with numeric values', () => {
+      const ast = parse('upd:products set:price=99.99,quantity=50 whr:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE products SET price = $1, quantity = $2 WHERE id = $3');
+      expect(result.params).toEqual([99.99, 50, 1]);
+    });
+
+    it('compiles update with null values', () => {
+      const ast = parse('upd:users set:deleted_at=null whr:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET deleted_at = $1 WHERE id = $2');
+      expect(result.params).toEqual([null, 1]);
+    });
+
+    it('compiles update with boolean values', () => {
+      const ast = parse('upd:users set:active=true,verified=false whr:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET active = $1, verified = $2 WHERE id = $3');
+      expect(result.params).toEqual([true, false, 1]);
+    });
+
+    it('compiles update with RETURNING clause', () => {
+      const ast = parse('upd:users set:name=john whr:id=1 ret:id,name,updated_at');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, updated_at');
+    });
+
+    it('compiles update with RETURNING *', () => {
+      const ast = parse('upd:users set:name=john whr:id=1 ret:*');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET name = $1 WHERE id = $2 RETURNING *');
+    });
+
+    it('compiles update with complex WHERE conditions', () => {
+      const ast = parse('upd:users set:status=banned whr:failed_logins>5,last_login.null');
+      const result = compile(ast);
+      expect(result.sql).toContain('UPDATE users SET status = $1');
+      expect(result.sql).toContain('WHERE');
+      expect(result.sql).toContain('AND');
+    });
+
+    it('uses MySQL placeholders for update', () => {
+      const ast = parse('upd:users set:name=john whr:id=1');
+      const result = compile(ast, { dialect: Dialect.MYSQL });
+      expect(result.sql).toBe('UPDATE users SET name = ? WHERE id = ?');
+    });
+  });
+
+  describe('Gen Alpha slang (no cap fr fr)', () => {
+    it('slays a basic SELECT query', () => {
+      const ast = parse('main:users slay:name,email');
+      const result = compile(ast);
+      expect(result.sql).toBe('SELECT name, email FROM users');
+    });
+
+    it('filters sus rows', () => {
+      const ast = parse('main:users slay:* sus:age>18');
+      const result = compile(ast);
+      expect(result.sql).toBe('SELECT * FROM users WHERE age > $1');
+      expect(result.params).toEqual([18]);
+    });
+
+    it('vibechecks the order', () => {
+      const ast = parse('main:users slay:name vibe:created_at/desc');
+      const result = compile(ast);
+      expect(result.sql).toBe('SELECT name FROM users ORDER BY created_at DESC');
+    });
+
+    it('bets on a limit', () => {
+      const ast = parse('main:users slay:* bet:10');
+      const result = compile(ast);
+      expect(result.sql).toContain('LIMIT');
+    });
+
+    it('squads up with GROUP BY', () => {
+      const ast = parse('main:orders slay:user_id,cnt:* squad:user_id');
+      const result = compile(ast);
+      expect(result.sql).toContain('GROUP BY user_id');
+    });
+
+    it('spills the tea with HAVING', () => {
+      const ast = parse('main:orders slay:user_id,sum:total squad:user_id tea:sum:total>1000');
+      const result = compile(ast);
+      expect(result.sql).toContain('HAVING');
+    });
+
+    it('links up tables with JOIN', () => {
+      const ast = parse('main:users link:orders match:users.id=orders.user_id slay:users.name,orders.total');
+      const result = compile(ast);
+      expect(result.sql).toContain('INNER JOIN orders');
+    });
+
+    it('nocap inserts fire values with that drip', () => {
+      const ast = parse('nocap:users drip:name,email fire:john,john@test.com');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name, email) VALUES ($1, $2)');
+      expect(result.params).toEqual(['john', 'john@test.com']);
+    });
+
+    it('nocap inserts and flexes the results', () => {
+      const ast = parse('nocap:users drip:name fire:john flex:id');
+      const result = compile(ast);
+      expect(result.sql).toBe('INSERT INTO users (name) VALUES ($1) RETURNING id');
+    });
+
+    it('glows up with rizz', () => {
+      const ast = parse('glow:users rizz:name=john sus:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET name = $1 WHERE id = $2');
+      expect(result.params).toEqual(['john', 1]);
+    });
+
+    it('glows up and flexes', () => {
+      const ast = parse('glow:users rizz:status=active sus:id=1 flex:*');
+      const result = compile(ast);
+      expect(result.sql).toBe('UPDATE users SET status = $1 WHERE id = $2 RETURNING *');
+    });
+
+    it('yeets data into the void', () => {
+      const ast = parse('yeet:users sus:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1');
+      expect(result.params).toEqual([1]);
+    });
+
+    it('yeets and flexes', () => {
+      const ast = parse('yeet:users sus:id=1 flex:id,email');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1 RETURNING id, email');
+    });
+
+    it('full gen alpha query is bussin', () => {
+      const ast = parse('main:users slay:name,email sus:age>21 vibe:name bet:10 skip:20');
+      const result = compile(ast);
+      expect(result.sql).toContain('SELECT name, email');
+      expect(result.sql).toContain('FROM users');
+      expect(result.sql).toContain('WHERE age > $1');
+      expect(result.sql).toContain('ORDER BY name');
+      expect(result.sql).toContain('LIMIT');
+      expect(result.sql).toContain('OFFSET');
+    });
+  });
+
+  describe('DELETE statements', () => {
+    it('compiles basic delete with WHERE', () => {
+      const ast = parse('del:users whr:id=1');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1');
+      expect(result.params).toEqual([1]);
+    });
+
+    it('compiles delete without WHERE (dangerous but valid)', () => {
+      const ast = parse('del:temp_data');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM temp_data');
+      expect(result.params).toEqual([]);
+    });
+
+    it('compiles delete with multiple WHERE conditions', () => {
+      const ast = parse('del:sessions whr:expired=true,created_at<2024-01-01');
+      const result = compile(ast);
+      expect(result.sql).toContain('DELETE FROM sessions');
+      expect(result.sql).toContain('WHERE');
+      expect(result.sql).toContain('AND');
+    });
+
+    it('compiles delete with OR conditions', () => {
+      const ast = parse('del:notifications whr:read=true|created_at<2024-01-01');
+      const result = compile(ast);
+      expect(result.sql).toContain('DELETE FROM notifications');
+      expect(result.sql).toContain('OR');
+    });
+
+    it('compiles delete with RETURNING clause', () => {
+      const ast = parse('del:users whr:id=1 ret:id,email');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1 RETURNING id, email');
+    });
+
+    it('compiles delete with RETURNING *', () => {
+      const ast = parse('del:users whr:id=1 ret:*');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1 RETURNING *');
+    });
+
+    it('compiles delete with IN condition', () => {
+      const ast = parse('del:users whr:id.in(1,2,3)');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE id IN ($1, $2, $3)');
+      expect(result.params).toEqual([1, 2, 3]);
+    });
+
+    it('compiles delete with NULL condition', () => {
+      const ast = parse('del:users whr:verified_at.null');
+      const result = compile(ast);
+      expect(result.sql).toBe('DELETE FROM users WHERE verified_at IS NULL');
+    });
+
+    it('uses MySQL placeholders for delete', () => {
+      const ast = parse('del:users whr:id=1');
+      const result = compile(ast, { dialect: Dialect.MYSQL });
+      expect(result.sql).toBe('DELETE FROM users WHERE id = ?');
+    });
+  });
 });

@@ -67,6 +67,7 @@ export class Query {
   /**
    * Convert query to raw SQL string (non-parameterized)
    *
+   * @param options - Optional compiler options to override defaults
    * @returns SQL string
    *
    * @example
@@ -75,9 +76,10 @@ export class Query {
    * // "SELECT name, email FROM users WHERE age > 18 ORDER BY name LIMIT 10"
    * ```
    */
-  toSQL(): string {
+  toSQL(options?: CompilerOptions): string {
     const compiled = compile(this.ast, {
       ...this.options,
+      ...options,
       parameterize: false,
     });
     return compiled.sql;
@@ -86,6 +88,7 @@ export class Query {
   /**
    * Convert query to parameterized SQL with parameter values
    *
+   * @param options - Optional compiler options to override defaults
    * @returns Object containing SQL string and parameter array
    *
    * @example
@@ -94,9 +97,10 @@ export class Query {
    * // { sql: "SELECT name FROM users WHERE age > $1 LIMIT $2", params: [18, 10] }
    * ```
    */
-  toParams(): { sql: string; params: unknown[] } {
+  toParams(options?: CompilerOptions): { sql: string; params: unknown[] } {
     const compiled = compile(this.ast, {
       ...this.options,
+      ...options,
       parameterize: true,
     });
     return {

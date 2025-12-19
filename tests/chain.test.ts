@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sq, sqw } from '../src';
+import { sq, sqw, createQueryBuilder } from '../src';
 
 describe('fluent builder API', () => {
   describe('basic methods', () => {
@@ -581,6 +581,107 @@ describe('fluent builder API', () => {
         .having('cnt:*', '>', 5);
       const sql = query.toSQL();
       expect(sql).toContain('HAVING');
+    });
+  });
+
+  describe('INSERT operations', () => {
+    it('creates basic insert', () => {
+      const query = createQueryBuilder().ins('users').cols('name', 'email').vals('john', 'john@test.com');
+      const result = query.toParams();
+      expect(result.sql).toBe('INSERT INTO users (name, email) VALUES ($1, $2)');
+      expect(result.params).toEqual(['john', 'john@test.com']);
+    });
+
+    it('creates insert with numeric values', () => {
+      const query = createQueryBuilder().ins('products').cols('name', 'price').vals('Widget', 29.99);
+      const result = query.toParams();
+      expect(result.sql).toBe('INSERT INTO products (name, price) VALUES ($1, $2)');
+      expect(result.params).toEqual(['Widget', 29.99]);
+    });
+
+    it('creates insert with null values', () => {
+      const query = createQueryBuilder().ins('users').cols('name', 'phone').vals('john', null);
+      const result = query.toParams();
+      expect(result.params).toEqual(['john', null]);
+    });
+
+    it('creates insert with RETURNING', () => {
+      const query = createQueryBuilder().ins('users').cols('name').vals('john').ret('id');
+      const result = query.toParams();
+      expect(result.sql).toBe('INSERT INTO users (name) VALUES ($1) RETURNING id');
+    });
+
+    it('creates insert with RETURNING *', () => {
+      const query = createQueryBuilder().ins('users').cols('name').vals('john').ret('*');
+      const result = query.toParams();
+      expect(result.sql).toBe('INSERT INTO users (name) VALUES ($1) RETURNING *');
+    });
+  });
+
+  describe('UPDATE operations', () => {
+    it('creates basic update', () => {
+      const query = createQueryBuilder().upd('users').set('name', 'john').whr('id', '=', 1);
+      const result = query.toParams();
+      expect(result.sql).toBe('UPDATE users SET name = $1 WHERE id = $2');
+      expect(result.params).toEqual(['john', 1]);
+    });
+
+    it('creates update with multiple SET values', () => {
+      const query = createQueryBuilder().upd('users').set('name', 'john').set('email', 'john@test.com').whr('id', '=', 1);
+      const result = query.toParams();
+      expect(result.sql).toBe('UPDATE users SET name = $1, email = $2 WHERE id = $3');
+    });
+
+    it('creates update with object SET form', () => {
+      const query = createQueryBuilder().upd('users').set({ name: 'john', age: 30 }).whr('id', '=', 1);
+      const result = query.toParams();
+      expect(result.sql).toContain('SET name = $1, age = $2');
+    });
+
+    it('creates update with RETURNING', () => {
+      const query = createQueryBuilder().upd('users').set('name', 'john').whr('id', '=', 1).ret('id', 'updated_at');
+      const result = query.toParams();
+      expect(result.sql).toContain('RETURNING id, updated_at');
+    });
+
+    it('creates update with null value', () => {
+      const query = createQueryBuilder().upd('users').set('deleted_at', null).whr('id', '=', 1);
+      const result = query.toParams();
+      expect(result.params).toContain(null);
+    });
+  });
+
+  describe('DELETE operations', () => {
+    it('creates basic delete', () => {
+      const query = createQueryBuilder().del('users').whr('id', '=', 1);
+      const result = query.toParams();
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1');
+      expect(result.params).toEqual([1]);
+    });
+
+    it('creates delete without WHERE', () => {
+      const query = createQueryBuilder().del('temp_data');
+      const result = query.toParams();
+      expect(result.sql).toBe('DELETE FROM temp_data');
+    });
+
+    it('creates delete with RETURNING', () => {
+      const query = createQueryBuilder().del('users').whr('id', '=', 1).ret('id', 'email');
+      const result = query.toParams();
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1 RETURNING id, email');
+    });
+
+    it('creates delete with RETURNING *', () => {
+      const query = createQueryBuilder().del('users').whr('id', '=', 1).ret('*');
+      const result = query.toParams();
+      expect(result.sql).toBe('DELETE FROM users WHERE id = $1 RETURNING *');
+    });
+
+    it('creates delete with complex WHERE', () => {
+      const query = createQueryBuilder().del('sessions').whr('expired', '=', true).whr('user_id', '=', 1);
+      const result = query.toParams();
+      expect(result.sql).toContain('DELETE FROM sessions');
+      expect(result.sql).toContain('AND');
     });
   });
 
