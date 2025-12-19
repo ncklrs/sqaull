@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/logo.svg" alt="squall - SQL that hits different" width="400" />
+  <img src="./assets/logo.svg" alt="sqaull - SQL that hits different" width="400" />
 </p>
 
 <h3 align="center">A Tailwind-inspired query language that compiles to SQL</h3>
@@ -18,7 +18,7 @@
 
 **What if writing SQL felt like writing Tailwind?**
 
-Tailwind transformed CSS by replacing verbose, scattered stylesheets with composable utility classes you write right where you need them. `sqwind` brings that same philosophy to SQL.
+Tailwind transformed CSS by replacing verbose, scattered stylesheets with composable utility classes you write right where you need them. `sqaull` brings that same philosophy to SQL.
 
 Instead of:
 ```sql
@@ -32,20 +32,20 @@ from:users sel:name,email whr:age>18 ord:created_at/desc lim:10
 
 The syntax is intentionally familiar. Colons separate utilities from values (like `hover:bg-blue`). Slashes add modifiers (like `md:text-lg`). Commas group related items. It's SQL distilled to its essence—composable, scannable, and expressive.
 
-But `sqwind` isn't just shorthand. It's a complete query builder with type safety, parameterization, and multi-dialect support. Define your schema once, and get compile-time validation that catches typos and type mismatches before they hit your database.
+But `sqaull` isn't just shorthand. It's a complete query builder with type safety, parameterization, and multi-dialect support. Define your schema once, and get compile-time validation that catches typos and type mismatches before they hit your database.
 
 ---
 
 ## Installation
 
 ```bash
-npm install sqwind
+npm install sqaull
 ```
 
 ## Quick Start
 
 ```typescript
-import { sqw, sq, defineSchema } from 'sqwind';
+import { sqw, sq, defineSchema } from 'sqaull';
 
 // Template literal API (primary)
 const query = sqw`from:users sel:name,email whr:age>18 ord:name lim:10`;
@@ -70,7 +70,7 @@ const query2 = sq
 Define your schema and get compile-time validation:
 
 ```typescript
-import { defineSchema } from 'sqwind';
+import { defineSchema } from 'sqaull';
 
 const db = defineSchema({
   users: {
@@ -100,7 +100,7 @@ db.sqw`from:users sel:foo`;
 
 ## Syntax Reference
 
-sqwind supports both **OG syntax** (for the SQL purists) and **Gen Alpha slang** (for the chronically online). Both produce identical SQL - use whichever speaks to your soul.
+sqaull supports both **OG syntax** (for the SQL purists) and **Gen Alpha slang** (for the chronically online). Both produce identical SQL - use whichever speaks to your soul.
 
 ### Basic Clauses
 
@@ -291,7 +291,7 @@ sqw`del:users whr:id=1 ret:*`
 ## Dialect Support
 
 ```typescript
-import { sqw, Dialect } from 'sqwind';
+import { sqw, Dialect } from 'sqaull';
 
 // PostgreSQL (default) - uses $1, $2 placeholders
 const pgQuery = sqw`from:users whr:age>18`;
@@ -312,7 +312,7 @@ const sqliteQuery = sqw`from:users whr:age>18`.withOptions({ dialect: Dialect.SQ
 ### `sqw` - Tagged Template Literal
 
 ```typescript
-import { sqw } from 'sqwind';
+import { sqw } from 'sqaull';
 
 const query = sqw`from:users sel:name whr:age>18`;
 query.toSQL();      // Raw SQL string
@@ -322,7 +322,7 @@ query.toParams();   // { sql: string, params: unknown[] }
 ### `sq` - Fluent Builder
 
 ```typescript
-import { sq, createQueryBuilder } from 'sqwind';
+import { sq, createQueryBuilder } from 'sqaull';
 
 // SELECT queries
 sq.from('users')
@@ -365,7 +365,7 @@ createQueryBuilder()
 ### `defineSchema` - Type-Safe Schema
 
 ```typescript
-import { defineSchema } from 'sqwind';
+import { defineSchema } from 'sqaull';
 
 const db = defineSchema({
   tableName: {
@@ -402,7 +402,7 @@ interface CompilerOptions {
 
 ## Database Execution
 
-sqwind includes a database execution layer with adapters for PostgreSQL, MySQL, and SQLite. Install the driver for your database:
+sqaull includes a database execution layer with adapters for PostgreSQL, MySQL, and SQLite. Install the driver for your database:
 
 ```bash
 # PostgreSQL
@@ -418,7 +418,7 @@ npm install better-sqlite3
 ### Connecting to a Database
 
 ```typescript
-import { createClient, Dialect } from 'sqwind';
+import { createClient, Dialect } from 'sqaull';
 
 // PostgreSQL
 const pg = createClient({
@@ -463,7 +463,7 @@ const orders = await client.sq
   .execute();
 
 // Execute Query objects
-import { sqw } from 'sqwind';
+import { sqw } from 'sqaull';
 const query = sqw`from:users sel:name whr:active=true`;
 const activeUsers = await client.run(query);
 
@@ -538,7 +538,7 @@ Define relationships between tables and load related data efficiently.
 ### Defining Relations
 
 ```typescript
-import { defineSchema, hasMany, belongsTo, hasOne, manyToMany } from 'sqwind';
+import { defineSchema, hasMany, belongsTo, hasOne, manyToMany } from 'sqaull';
 
 const db = defineSchema({
   users: { id: 'number', name: 'string', email: 'string' },
@@ -578,7 +578,7 @@ const db = defineSchema({
 | `manyToMany` | `linked` | "User linked with roles" |
 
 ```typescript
-import { stacked, got, simps, linked } from 'sqwind';
+import { stacked, got, simps, linked } from 'sqaull';
 
 const relations = {
   users: {
@@ -609,7 +609,7 @@ await client.query`main:users slay:* fam:posts`;
 ### Complete Example
 
 ```typescript
-import { createClient, defineSchema, hasMany, belongsTo, Dialect } from 'sqwind';
+import { createClient, defineSchema, hasMany, belongsTo, Dialect } from 'sqaull';
 
 // Define schema with relations
 const db = defineSchema({
@@ -645,7 +645,7 @@ squall includes a powerful migration system for managing database schema changes
 ### Creating Migrations
 
 ```typescript
-import { createMigration, createMigrationRunner, createClient, Dialect } from 'sqwind';
+import { createMigration, createMigrationRunner, createClient, Dialect } from 'sqaull';
 
 // Define a migration using the fluent builder API
 const createUsersTable = createMigration('create_users_table')
@@ -661,7 +661,7 @@ const createUsersTable = createMigration('create_users_table')
   .build();
 
 // Or use Gen Alpha style (glow up your schema fr fr)
-import { glow, evolve } from 'sqwind';
+import { glow, evolve } from 'sqaull';
 
 const createPostsTable = glow('create_posts_table')  // Glow up = createMigration
   .createTable('posts', (table) => {
@@ -751,7 +751,7 @@ createMigration('add_extension')
 ### Running Migrations
 
 ```typescript
-import { createMigrationRunner, createClient, Dialect } from 'sqwind';
+import { createMigrationRunner, createClient, Dialect } from 'sqaull';
 
 // Connect to database
 const client = createClient({
@@ -792,7 +792,7 @@ await runner.reset();
 For more control, use `defineMigration` (or `evolve` in Gen Alpha):
 
 ```typescript
-import { defineMigration, evolve } from 'sqwind';
+import { defineMigration, evolve } from 'sqaull';
 
 // Traditional style
 const migration = defineMigration({

@@ -1,5 +1,5 @@
 {
-  "name": "sqwind",
+  "name": "sqaull",
   "version": "0.1.0",
   "description": "A Tailwind-inspired query language that compiles to SQL",
   "type": "module",
@@ -36,6 +36,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ncklrs/sqaull.git"
+  },
+  "homepage": "https://github.com/ncklrs/sqaull#readme",
+  "bugs": {
+    "url": "https://github.com/ncklrs/sqaull/issues"
+  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "tsup": "^8.3.5",
