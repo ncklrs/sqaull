@@ -1,0 +1,45 @@
+{
+  "name": "sqwind",
+  "version": "0.1.0",
+  "description": "A Tailwind-inspired query language that compiles to SQL",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "sql",
+    "query",
+    "query-builder",
+    "tailwind",
+    "database",
+    "orm",
+    "postgres",
+    "mysql",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
