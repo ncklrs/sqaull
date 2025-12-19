@@ -114,7 +114,18 @@ function sqwWithOptions(
 
   // Parse the query string with actual values
   const tokens = lex(queryString);
+
+  // Validate: must have at least some tokens
+  if (tokens.length === 0) {
+    throw new Error('Query cannot be empty');
+  }
+
   const ast = parse(tokens);
+
+  // Validate: must have a table (FROM, INSERT, UPDATE, or DELETE)
+  if (!ast.from && !ast.insert && !ast.update && !ast.delete) {
+    throw new Error('Query must specify a table (from:, ins:, upd:, or del:)');
+  }
 
   // Create and return Query with the AST and actual parameters for WHERE clauses
   const query = new Query(ast, options);

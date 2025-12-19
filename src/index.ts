@@ -1,12 +1,14 @@
 /**
- * sqwind - A Tailwind-inspired query language for SQL
+ * sqaull - SQL that hits different
+ *
+ * A Tailwind-inspired query language that compiles to SQL.
  *
  * @example
  * ```typescript
- * import { sqw, sq, defineSchema } from 'sqwind';
+ * import { gull, sq, defineSchema } from 'sqaull';
  *
- * // Template literal API (primary)
- * const query = sqw`from:users sel:name,email whr:age>18 ord:name lim:10`;
+ * // Template literal API (primary) - gull for Gen Alpha, sqw for OG
+ * const query = gull`from:users sel:name,email whr:age>18 ord:name lim:10`;
  * query.toSQL();    // "SELECT name, email FROM users WHERE age > 18 ORDER BY name LIMIT 10"
  * query.toParams(); // { sql: "SELECT ... WHERE age > $1 ...", params: [18] }
  *
@@ -24,7 +26,7 @@
  *   orders: { id: 'number', user_id: 'number', total: 'number' },
  * });
  *
- * db.sqw`from:users sel:name,email`; // Type-checked!
+ * db.gull`from:users sel:name,email`; // Type-checked!
  * ```
  */
 
@@ -39,7 +41,7 @@ export { Dialect, type CompilerOptions } from './compiler/types';
 export * from './compiler/dialects';
 
 // Builder exports
-export { sqw } from './builder/template';
+export { sqw, sqw as gull } from './builder/template';
 export { sq, QueryBuilder, createQueryBuilder } from './builder/chain';
 export { Query } from './builder/query';
 

@@ -76,6 +76,54 @@ export class LexerError extends Error {
 }
 
 /**
+ * Split input into parts while respecting quoted strings
+ * e.g., "whr:name='john doe' sel:id" -> ["whr:name='john doe'", "sel:id"]
+ */
+function splitPreservingQuotes(input: string): { part: string; position: number }[] {
+  const parts: { part: string; position: number }[] = [];
+  let current = '';
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let startPosition = 0;
+  let foundStart = false;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+
+    // Track start position of current part (skip leading whitespace)
+    if (!foundStart && char !== ' ' && char !== '\t' && char !== '\n') {
+      startPosition = i;
+      foundStart = true;
+    }
+
+    // Handle quote state changes
+    if (char === "'" && !inDoubleQuote) {
+      inSingleQuote = !inSingleQuote;
+      current += char;
+    } else if (char === '"' && !inSingleQuote) {
+      inDoubleQuote = !inDoubleQuote;
+      current += char;
+    } else if ((char === ' ' || char === '\t' || char === '\n') && !inSingleQuote && !inDoubleQuote) {
+      // End of part (whitespace outside quotes)
+      if (current.length > 0) {
+        parts.push({ part: current, position: startPosition });
+        current = '';
+        foundStart = false;
+      }
+    } else {
+      current += char;
+    }
+  }
+
+  // Don't forget the last part
+  if (current.length > 0) {
+    parts.push({ part: current, position: startPosition });
+  }
+
+  return parts;
+}
+
+/**
  * Tokenize a sqwind query string into tokens
  *
  * @param input - The sqwind query string to tokenize
@@ -93,22 +141,22 @@ export class LexerError extends Error {
  * ```
  */
 export function lex(input: string): Token[] {
+  // Handle edge cases
+  if (!input || input.trim().length === 0) {
+    return [];
+  }
+
   const tokens: Token[] = [];
-  const parts = input.trim().split(/\s+/);
+  const parts = splitPreservingQuotes(input.trim());
 
-  let currentPosition = 0;
-
-  for (const part of parts) {
-    // Find the position of this part in the original string
-    const partIndex = input.indexOf(part, currentPosition);
-
+  for (const { part, position } of parts) {
     // Split by colon to get utility and value
     const colonIndex = part.indexOf(':');
 
     if (colonIndex === -1) {
       throw new LexerError(
         `Invalid syntax: expected utility:value format, got "${part}"`,
-        partIndex
+        position
       );
     }
 
@@ -118,24 +166,22 @@ export function lex(input: string): Token[] {
     if (!value) {
       throw new LexerError(
         `Invalid syntax: utility "${utility}" has no value`,
-        partIndex
+        position
       );
     }
 
     const tokenType = TOKEN_MAP[utility];
 
     if (!tokenType) {
-      throw new LexerError(`Unknown utility: "${utility}"`, partIndex);
+      throw new LexerError(`Unknown utility: "${utility}"`, position);
     }
 
     tokens.push({
       type: tokenType,
       value,
-      position: partIndex,
+      position,
       raw: part,
     });
-
-    currentPosition = partIndex + part.length;
   }
 
   return tokens;

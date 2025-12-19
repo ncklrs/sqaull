@@ -207,7 +207,7 @@ function parseConditionExpression(expr: string): Condition {
     };
   }
 
-  // Handle .in() and .nin()
+  // Handle .in() - positive IN condition
   const inMatch = expr.match(/^(.+?)\.in\((.+)\)$/);
   if (inMatch) {
     const column = inMatch[1];
@@ -221,6 +221,21 @@ function parseConditionExpression(expr: string): Condition {
     };
   }
 
+  // Handle .!in() - negated IN condition (NOT IN)
+  const notInMatch = expr.match(/^(.+?)\.!in\((.+)\)$/);
+  if (notInMatch) {
+    const column = notInMatch[1];
+    const valuesStr = notInMatch[2];
+    const values = valuesStr.split(',').map((v) => parseValue(v.trim()));
+    return {
+      type: 'in',
+      column,
+      values,
+      negated: true,
+    };
+  }
+
+  // Handle .nin() - alternative negated IN syntax
   const ninMatch = expr.match(/^(.+?)\.nin\((.+)\)$/);
   if (ninMatch) {
     const column = ninMatch[1];
@@ -286,13 +301,34 @@ function splitConditionString(str: string, separator: string): string[] {
 
 /**
  * Parses a condition string that may contain OR (|) or AND (,) operators
+ * OR has lower precedence than AND, so we split by OR first
  */
 function parseCondition(conditionStr: string): Condition {
   conditionStr = conditionStr.trim();
 
-  // First, check for comma-separated AND conditions
+  // First, split by | for OR conditions (lower precedence = outer operation)
+  const orParts = splitConditionString(conditionStr, '|');
+
+  // If we have multiple OR parts, create an OR condition
+  if (orParts.length > 1) {
+    return {
+      type: 'or',
+      conditions: orParts.map((part) => parseConditionAndExpression(part.trim())),
+    };
+  }
+
+  // Otherwise, parse as AND expression or single condition
+  return parseConditionAndExpression(conditionStr);
+}
+
+/**
+ * Parses a condition string that may contain AND (,) operators
+ */
+function parseConditionAndExpression(conditionStr: string): Condition {
+  conditionStr = conditionStr.trim();
+
+  // Split by comma for AND conditions
   // But we need to be careful not to split values like "1,2,3" in .in(1,2,3)
-  // Only split on commas that are followed by a condition pattern (colName or !)
   const andParts = splitConditionString(conditionStr, ',');
 
   // Filter out empty parts and check if we have multiple valid conditions
@@ -304,28 +340,7 @@ function parseCondition(conditionStr: string): Condition {
     // Multiple AND conditions
     return {
       type: 'and',
-      conditions: validAndParts.map((part) => parseConditionOrExpression(part)),
-    };
-  }
-
-  // Otherwise, parse as OR expression or single condition
-  return parseConditionOrExpression(conditionStr);
-}
-
-/**
- * Parses a condition string that may contain OR (|) operators
- */
-function parseConditionOrExpression(conditionStr: string): Condition {
-  conditionStr = conditionStr.trim();
-
-  // Split by | for OR conditions
-  const orParts = splitConditionString(conditionStr, '|');
-
-  // If we have multiple OR parts, create an OR condition
-  if (orParts.length > 1) {
-    return {
-      type: 'or',
-      conditions: orParts.map((part) => parseConditionExpression(part.trim())),
+      conditions: validAndParts.map((part) => parseConditionExpression(part.trim())),
     };
   }
 

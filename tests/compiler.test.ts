@@ -512,7 +512,7 @@ describe('compiler', () => {
     it('maintains parameter order', () => {
       const ast = parse('from:users whr:age>18,status=active,verified=true');
       const result = compile(ast);
-      expect(result.params).toEqual([18, 'active', 'true']);
+      expect(result.params).toEqual([18, 'active', true]);
     });
   });
 

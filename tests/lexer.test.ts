@@ -233,7 +233,7 @@ describe('lexer', () => {
 
     it('tokenizes query with all clauses', () => {
       const tokens = lex('from:users sel:name whr:age>18 grp:country hav:cnt:*>5 ord:name/desc lim:10 off:5');
-      expect(tokens).toHaveLength(7);
+      expect(tokens).toHaveLength(8);
       expect(tokens.map(t => t.type)).toEqual([
         TokenType.FROM,
         TokenType.SELECT,
