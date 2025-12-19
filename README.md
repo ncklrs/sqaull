@@ -45,10 +45,15 @@ npm install sqaull
 ## Quick Start
 
 ```typescript
-import { sqw, sq, defineSchema } from 'sqaull';
+import { gull, sqw, sq, defineSchema } from 'sqaull';
 
-// Template literal API (primary)
-const query = sqw`from:users sel:name,email whr:age>18 ord:name lim:10`;
+// Template literal API - choose your vibe:
+// 🦅 gull = Gen Alpha energy
+// 📟 sqw = OG mode
+
+const query = gull`from:users sel:name,email whr:age>18 ord:name lim:10`;
+// or
+const same = sqw`from:users sel:name,email whr:age>18 ord:name lim:10`;
 
 query.toSQL();
 // "SELECT name, email FROM users WHERE age > 18 ORDER BY name LIMIT 10"
@@ -88,19 +93,27 @@ const db = defineSchema({
   },
 });
 
-// ✅ Valid - columns exist in schema
+// ✅ Valid - columns exist in schema (both work)
+db.gull`from:users sel:name,email whr:age>18`;
 db.sqw`from:users sel:name,email whr:age>18`;
 
 // ✅ Type-safe fluent builder
 db.sq.from('users').sel('name', 'email').whr('age', '>', 18);
 
 // ❌ Runtime error - 'foo' is not a column in users
-db.sqw`from:users sel:foo`;
+db.gull`from:users sel:foo`;
 ```
 
 ## Syntax Reference
 
 sqaull supports both **OG syntax** (for the SQL purists) and **Gen Alpha slang** (for the chronically online). Both produce identical SQL - use whichever speaks to your soul.
+
+### Template Functions
+
+| Function | Vibe | Example |
+|----------|------|---------|
+| `gull` | Gen Alpha | ``gull`main:users slay:name` `` |
+| `sqw` | OG | ``sqw`from:users sel:name` `` |
 
 ### Basic Clauses
 
@@ -129,27 +142,27 @@ sqaull supports both **OG syntax** (for the SQL purists) and **Gen Alpha slang**
 
 ```typescript
 // SELECT with main character energy
-sqw`main:users slay:name,email sus:age>21 vibe:created_at/desc bet:10`
+gull`main:users slay:name,email sus:age>21 vibe:created_at/desc bet:10`
 // SELECT name, email FROM users WHERE age > 21 ORDER BY created_at DESC LIMIT 10
 
 // INSERT - no cap, dropping fire values
-sqw`nocap:users drip:name,email fire:john,john@test.com flex:id`
+gull`nocap:users drip:name,email fire:john,john@test.com flex:id`
 // INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id
 
 // UPDATE - glow up with that rizz
-sqw`glow:users rizz:status=active,verified=true sus:id=1 flex:*`
+gull`glow:users rizz:status=active,verified=true sus:id=1 flex:*`
 // UPDATE users SET status = $1, verified = $2 WHERE id = $3 RETURNING *
 
 // DELETE - yeet into the void
-sqw`yeet:sessions sus:expired=true`
+gull`yeet:sessions sus:expired=true`
 // DELETE FROM sessions WHERE expired = $1
 
 // JOIN - link up
-sqw`main:users link:orders/left match:users.id=orders.user_id slay:users.name,orders.total`
+gull`main:users link:orders/left match:users.id=orders.user_id slay:users.name,orders.total`
 // SELECT users.name, orders.total FROM users LEFT JOIN orders ON users.id = orders.user_id
 
 // Aggregation - squad up and spill the tea
-sqw`main:orders slay:user_id,sum:total,cnt:* squad:user_id tea:sum:total>1000 vibe:sum:total/desc`
+gull`main:orders slay:user_id,sum:total,cnt:* squad:user_id tea:sum:total>1000 vibe:sum:total/desc`
 // SELECT user_id, SUM(total), COUNT(*) FROM orders GROUP BY user_id HAVING SUM(total) > $1 ORDER BY SUM(total) DESC
 ```
 
