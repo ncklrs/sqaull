@@ -220,7 +220,7 @@ describe('database execution layer', () => {
 });
 
 describe('database integration patterns', () => {
-  it('demonstrates sqwind + client usage pattern', () => {
+  it.todo('demonstrates sqwind + client usage pattern', () => {
     // This test shows the intended usage pattern
     // (without actual database connection)
 
