@@ -1,14 +1,14 @@
 /**
- * sqaull - SQL that hits different
+ * genAQL - SQL for Gen Alpha
  *
- * A Tailwind-inspired query language that compiles to SQL.
+ * A query language that compiles to SQL.
  *
  * @example
  * ```typescript
- * import { gull, sq, defineSchema } from 'sqaull';
+ * import { cook, sq, defineSchema } from 'genaql';
  *
- * // Template literal API (primary) - gull for Gen Alpha, sqw for OG
- * const query = gull`from:users sel:name,email whr:age>18 ord:name lim:10`;
+ * // Template literal API (primary) - cook for Gen Alpha, sqw for standard syntax
+ * const query = cook`from:users sel:name,email whr:age>18 ord:name lim:10`;
  * query.toSQL();    // "SELECT name, email FROM users WHERE age > 18 ORDER BY name LIMIT 10"
  * query.toParams(); // { sql: "SELECT ... WHERE age > $1 ...", params: [18] }
  *
@@ -26,7 +26,7 @@
  *   orders: { id: 'number', user_id: 'number', total: 'number' },
  * });
  *
- * db.gull`from:users sel:name,email`; // Type-checked!
+ * db.cook`from:users sel:name,email`; // Type-checked!
  * ```
  */
 
@@ -41,7 +41,7 @@ export { Dialect, type CompilerOptions } from './compiler/types';
 export * from './compiler/dialects';
 
 // Builder exports
-export { sqw, sqw as gull } from './builder/template';
+export { sqw, sqw as cook } from './builder/template';
 export { sq, QueryBuilder, createQueryBuilder } from './builder/chain';
 export { Query } from './builder/query';
 

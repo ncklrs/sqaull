@@ -40,16 +40,16 @@ export interface TypedSchemaBuilder<T extends DatabaseSchema> {
  */
 export type TypedDatabase<T extends DatabaseSchema> = {
   /**
-   * Tagged template for type-safe SQL queries (OG syntax)
+   * Tagged template for type-safe SQL queries (standard syntax)
    * Validates column names and table names against schema
    */
   sqw(strings: TemplateStringsArray, ...values: unknown[]): Query;
 
   /**
-   * Tagged template for type-safe SQL queries (Gen Alpha - gull for sqaull)
+   * Tagged template for type-safe SQL queries (Gen Alpha style)
    * Validates column names and table names against schema
    */
-  gull(strings: TemplateStringsArray, ...values: unknown[]): Query;
+  cook(strings: TemplateStringsArray, ...values: unknown[]): Query;
 
   /**
    * Fluent query builder (type-safe)
@@ -99,18 +99,18 @@ class TypedDatabaseImpl<T extends DatabaseSchema> {
   }
 
   /**
-   * Tagged template implementation (OG syntax)
+   * Tagged template implementation (standard syntax)
    * Parses and validates the query string
    */
   sqw(strings: TemplateStringsArray, ...values: unknown[]): Query {
-    return this.gull(strings, ...values);
+    return this.cook(strings, ...values);
   }
 
   /**
-   * Tagged template implementation (Gen Alpha - gull for sqaull)
+   * Tagged template implementation (Gen Alpha style)
    * Parses and validates the query string
    */
-  gull(strings: TemplateStringsArray, ...values: unknown[]): Query {
+  cook(strings: TemplateStringsArray, ...values: unknown[]): Query {
     // Reconstruct the full query string
     let query = strings[0];
     for (let i = 0; i < values.length; i++) {

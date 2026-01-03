@@ -1,7 +1,7 @@
 {
-  "name": "sqaull",
+  "name": "genaql",
   "version": "0.1.0",
-  "description": "A Tailwind-inspired query language that compiles to SQL",
+  "description": "SQL for Gen Alpha - a query language that compiles to SQL",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -27,7 +27,7 @@
     "sql",
     "query",
     "query-builder",
-    "tailwind",
+    "gen-alpha",
     "database",
     "orm",
     "postgres",
@@ -38,11 +38,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ncklrs/sqaull.git"
+    "url": "git+https://github.com/ncklrs/genaql.git"
   },
-  "homepage": "https://github.com/ncklrs/sqaull#readme",
+  "homepage": "https://github.com/ncklrs/genaql#readme",
   "bugs": {
-    "url": "https://github.com/ncklrs/sqaull/issues"
+    "url": "https://github.com/ncklrs/genaql/issues"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

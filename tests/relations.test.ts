@@ -115,7 +115,7 @@ describe('relation definitions', () => {
 });
 
 describe('WITH syntax parsing', () => {
-  describe('OG syntax (with:)', () => {
+  describe('Classic syntax (with:)', () => {
     it('parses single relation', () => {
       const ast = parse('from:users sel:* with:posts');
       expect(ast.with).toBeDefined();

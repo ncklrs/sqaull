@@ -26,13 +26,13 @@
   <path d="M72 28 L58 50 L70 50 L52 72 L62 52 L50 52 L68 28Z"
         fill="url(#bolt)" filter="url(#glow)"/>
 
-  <!-- Text: squall -->
+  <!-- Text: genAQL -->
   <text x="135" y="62" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="48" font-weight="800" fill="url(#storm)">
-    sqaull
+    genAQL
   </text>
 
   <!-- Tagline -->
   <text x="135" y="82" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500" fill="#64748B">
-    SQL that hits different
+    SQL for Gen Alpha
   </text>
 </svg>

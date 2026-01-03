@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./assets/logo.svg" alt="sqaull - SQL that hits different" width="400" />
+  <img src="./assets/logo.svg" alt="genAQL - SQL for Gen Alpha" width="400" />
 </p>
 
-<h3 align="center">A Tailwind-inspired query language that compiles to SQL</h3>
+<h3 align="center">SQL for Gen Alpha - a query language that compiles to SQL</h3>
 
 <p align="center">
   <a href="#installation">Installation</a> |
@@ -16,9 +16,9 @@
 
 ## Vision
 
-**What if writing SQL felt like writing Tailwind?**
+**What if writing SQL actually felt bussin?**
 
-Tailwind transformed CSS by replacing verbose, scattered stylesheets with composable utility classes you write right where you need them. `sqaull` brings that same philosophy to SQL.
+`genAQL` brings Gen Alpha energy to SQL. Composable utility classes you write right where you need them, with syntax that slaps.
 
 Instead of:
 ```sql
@@ -30,28 +30,28 @@ You write:
 from:users sel:name,email whr:age>18 ord:created_at/desc lim:10
 ```
 
-The syntax is intentionally familiar. Colons separate utilities from values (like `hover:bg-blue`). Slashes add modifiers (like `md:text-lg`). Commas group related items. It's SQL distilled to its essence—composable, scannable, and expressive.
+The syntax is intuitive fr fr. Colons separate utilities from values. Slashes add modifiers. Commas group related items. It's SQL distilled to its essence—composable, scannable, and expressive.
 
-But `sqaull` isn't just shorthand. It's a complete query builder with type safety, parameterization, and multi-dialect support. Define your schema once, and get compile-time validation that catches typos and type mismatches before they hit your database.
+But `genAQL` isn't just shorthand. It's a complete query builder with type safety, parameterization, and multi-dialect support. Define your schema once, and get compile-time validation that catches typos and type mismatches before they hit your database.
 
 ---
 
 ## Installation
 
 ```bash
-npm install sqaull
+npm install genaql
 ```
 
 ## Quick Start
 
 ```typescript
-import { gull, sqw, sq, defineSchema } from 'sqaull';
+import { cook, sqw, sq, defineSchema } from 'genaql';
 
 // Template literal API - choose your vibe:
-// 🦅 gull = Gen Alpha energy
-// 📟 sqw = OG mode
+// 🔥 cook = Gen Alpha energy
+// 📦 sqw = Classic syntax
 
-const query = gull`from:users sel:name,email whr:age>18 ord:name lim:10`;
+const query = cook`from:users sel:name,email whr:age>18 ord:name lim:10`;
 // or
 const same = sqw`from:users sel:name,email whr:age>18 ord:name lim:10`;
 
@@ -75,7 +75,7 @@ const query2 = sq
 Define your schema and get compile-time validation:
 
 ```typescript
-import { defineSchema } from 'sqaull';
+import { defineSchema } from 'genaql';
 
 const db = defineSchema({
   users: {
@@ -94,30 +94,30 @@ const db = defineSchema({
 });
 
 // ✅ Valid - columns exist in schema (both work)
-db.gull`from:users sel:name,email whr:age>18`;
+db.cook`from:users sel:name,email whr:age>18`;
 db.sqw`from:users sel:name,email whr:age>18`;
 
 // ✅ Type-safe fluent builder
 db.sq.from('users').sel('name', 'email').whr('age', '>', 18);
 
 // ❌ Runtime error - 'foo' is not a column in users
-db.gull`from:users sel:foo`;
+db.cook`from:users sel:foo`;
 ```
 
 ## Syntax Reference
 
-sqaull supports both **OG syntax** (for the SQL purists) and **Gen Alpha slang** (for the chronically online). Both produce identical SQL - use whichever speaks to your soul.
+genAQL supports two equivalent syntaxes: **classic** (familiar SQL-like keywords) and **Gen Alpha** (for the chronically online). Both produce identical SQL - use whichever speaks to your soul.
 
 ### Template Functions
 
 | Function | Vibe | Example |
 |----------|------|---------|
-| `gull` | Gen Alpha | ``gull`main:users slay:name` `` |
-| `sqw` | OG | ``sqw`from:users sel:name` `` |
+| `cook` | Gen Alpha | ``cook`main:users slay:name` `` |
+| `sqw` | Classic | ``sqw`from:users sel:name` `` |
 
 ### Basic Clauses
 
-| OG Syntax | Gen Alpha | SQL Equivalent | Example |
+| Classic | Gen Alpha | SQL Equivalent | Example |
 |-----------|-----------|----------------|---------|
 | `from:` | `main:` | FROM | `main:users` |
 | `sel:` | `slay:` | SELECT | `slay:name,email` |
@@ -142,31 +142,31 @@ sqaull supports both **OG syntax** (for the SQL purists) and **Gen Alpha slang**
 
 ```typescript
 // SELECT with main character energy
-gull`main:users slay:name,email sus:age>21 vibe:created_at/desc bet:10`
+cook`main:users slay:name,email sus:age>21 vibe:created_at/desc bet:10`
 // SELECT name, email FROM users WHERE age > 21 ORDER BY created_at DESC LIMIT 10
 
 // INSERT - no cap, dropping fire values
-gull`nocap:users drip:name,email fire:john,john@test.com flex:id`
+cook`nocap:users drip:name,email fire:john,john@test.com flex:id`
 // INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id
 
 // UPDATE - glow up with that rizz
-gull`glow:users rizz:status=active,verified=true sus:id=1 flex:*`
+cook`glow:users rizz:status=active,verified=true sus:id=1 flex:*`
 // UPDATE users SET status = $1, verified = $2 WHERE id = $3 RETURNING *
 
 // DELETE - yeet into the void
-gull`yeet:sessions sus:expired=true`
+cook`yeet:sessions sus:expired=true`
 // DELETE FROM sessions WHERE expired = $1
 
 // JOIN - link up
-gull`main:users link:orders/left match:users.id=orders.user_id slay:users.name,orders.total`
+cook`main:users link:orders/left match:users.id=orders.user_id slay:users.name,orders.total`
 // SELECT users.name, orders.total FROM users LEFT JOIN orders ON users.id = orders.user_id
 
 // Aggregation - squad up and spill the tea
-gull`main:orders slay:user_id,sum:total,cnt:* squad:user_id tea:sum:total>1000 vibe:sum:total/desc`
+cook`main:orders slay:user_id,sum:total,cnt:* squad:user_id tea:sum:total>1000 vibe:sum:total/desc`
 // SELECT user_id, SUM(total), COUNT(*) FROM orders GROUP BY user_id HAVING SUM(total) > $1 ORDER BY SUM(total) DESC
 ```
 
-### OG Syntax (for the boomers)
+### Classic Syntax
 
 | Utility | SQL Equivalent | Example |
 |---------|---------------|---------|
@@ -304,7 +304,7 @@ sqw`del:users whr:id=1 ret:*`
 ## Dialect Support
 
 ```typescript
-import { sqw, Dialect } from 'sqaull';
+import { sqw, Dialect } from 'genaql';
 
 // PostgreSQL (default) - uses $1, $2 placeholders
 const pgQuery = sqw`from:users whr:age>18`;
@@ -325,7 +325,7 @@ const sqliteQuery = sqw`from:users whr:age>18`.withOptions({ dialect: Dialect.SQ
 ### `sqw` - Tagged Template Literal
 
 ```typescript
-import { sqw } from 'sqaull';
+import { sqw } from 'genaql';
 
 const query = sqw`from:users sel:name whr:age>18`;
 query.toSQL();      // Raw SQL string
@@ -335,7 +335,7 @@ query.toParams();   // { sql: string, params: unknown[] }
 ### `sq` - Fluent Builder
 
 ```typescript
-import { sq, createQueryBuilder } from 'sqaull';
+import { sq, createQueryBuilder } from 'genaql';
 
 // SELECT queries
 sq.from('users')
@@ -378,7 +378,7 @@ createQueryBuilder()
 ### `defineSchema` - Type-Safe Schema
 
 ```typescript
-import { defineSchema } from 'sqaull';
+import { defineSchema } from 'genaql';
 
 const db = defineSchema({
   tableName: {
@@ -415,7 +415,7 @@ interface CompilerOptions {
 
 ## Database Execution
 
-sqaull includes a database execution layer with adapters for PostgreSQL, MySQL, and SQLite. Install the driver for your database:
+genAQL includes a database execution layer with adapters for PostgreSQL, MySQL, and SQLite. Install the driver for your database:
 
 ```bash
 # PostgreSQL
@@ -431,7 +431,7 @@ npm install better-sqlite3
 ### Connecting to a Database
 
 ```typescript
-import { createClient, Dialect } from 'sqaull';
+import { createClient, Dialect } from 'genaql';
 
 // PostgreSQL
 const pg = createClient({
@@ -476,7 +476,7 @@ const orders = await client.sq
   .execute();
 
 // Execute Query objects
-import { sqw } from 'sqaull';
+import { sqw } from 'genaql';
 const query = sqw`from:users sel:name whr:active=true`;
 const activeUsers = await client.run(query);
 
@@ -551,7 +551,7 @@ Define relationships between tables and load related data efficiently.
 ### Defining Relations
 
 ```typescript
-import { defineSchema, hasMany, belongsTo, hasOne, manyToMany } from 'sqaull';
+import { defineSchema, hasMany, belongsTo, hasOne, manyToMany } from 'genaql';
 
 const db = defineSchema({
   users: { id: 'number', name: 'string', email: 'string' },
@@ -583,15 +583,15 @@ const db = defineSchema({
 
 ### Gen Alpha Relation Aliases (no cap fr fr)
 
-| OG | Gen Alpha | Usage |
-|----|-----------|-------|
+| Classic | Gen Alpha | Usage |
+|---------|-----------|-------|
 | `hasOne` | `got` | "User got profile" |
 | `hasMany` | `stacked` | "User stacked posts" |
 | `belongsTo` | `simps` | "Post simps for user" |
 | `manyToMany` | `linked` | "User linked with roles" |
 
 ```typescript
-import { stacked, got, simps, linked } from 'sqaull';
+import { stacked, got, simps, linked } from 'genaql';
 
 const relations = {
   users: {
@@ -606,7 +606,7 @@ const relations = {
 
 ### Eager Loading Syntax
 
-Use `with:` (OG) or `fam:` (Gen Alpha) to load related data:
+Use `with:` (classic) or `fam:` (Gen Alpha) to load related data:
 
 ```typescript
 // Load users with their posts
@@ -622,7 +622,7 @@ await client.query`main:users slay:* fam:posts`;
 ### Complete Example
 
 ```typescript
-import { createClient, defineSchema, hasMany, belongsTo, Dialect } from 'sqaull';
+import { createClient, defineSchema, hasMany, belongsTo, Dialect } from 'genaql';
 
 // Define schema with relations
 const db = defineSchema({
@@ -658,7 +658,7 @@ squall includes a powerful migration system for managing database schema changes
 ### Creating Migrations
 
 ```typescript
-import { createMigration, createMigrationRunner, createClient, Dialect } from 'sqaull';
+import { createMigration, createMigrationRunner, createClient, Dialect } from 'genaql';
 
 // Define a migration using the fluent builder API
 const createUsersTable = createMigration('create_users_table')
@@ -674,7 +674,7 @@ const createUsersTable = createMigration('create_users_table')
   .build();
 
 // Or use Gen Alpha style (glow up your schema fr fr)
-import { glow, evolve } from 'sqaull';
+import { glow, evolve } from 'genaql';
 
 const createPostsTable = glow('create_posts_table')  // Glow up = createMigration
   .createTable('posts', (table) => {
@@ -764,7 +764,7 @@ createMigration('add_extension')
 ### Running Migrations
 
 ```typescript
-import { createMigrationRunner, createClient, Dialect } from 'sqaull';
+import { createMigrationRunner, createClient, Dialect } from 'genaql';
 
 // Connect to database
 const client = createClient({
@@ -805,7 +805,7 @@ await runner.reset();
 For more control, use `defineMigration` (or `evolve` in Gen Alpha):
 
 ```typescript
-import { defineMigration, evolve } from 'sqaull';
+import { defineMigration, evolve } from 'genaql';
 
 // Traditional style
 const migration = defineMigration({
@@ -834,8 +834,8 @@ const genAlphaMigration = evolve({
 
 ### Migration Gen Alpha Aliases
 
-| OG | Gen Alpha | Vibe |
-|----|-----------|------|
+| Classic | Gen Alpha | Vibe |
+|---------|-----------|------|
 | `createMigration()` | `glow()` | Glow up your schema |
 | `defineMigration()` | `evolve()` | Evolution arc for your DB |
 

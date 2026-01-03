@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to sqaull will be documented in this file.
+All notable changes to genAQL will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Core Query Language**
-  - Template literal API (`gull`, `sqw`) for writing SQL queries
+  - Template literal API (`cook`, `sqw`) for writing SQL queries
   - Fluent builder API (`sq.from().sel().whr()`)
   - Support for SELECT, INSERT, UPDATE, DELETE statements
   - WHERE conditions with comparison operators (`>`, `<`, `>=`, `<=`, `=`, `!=`, `~`)
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `glow:` → UPDATE (glow up)
   - `yeet:` → DELETE
   - `fam:` → WITH (eager loading)
-  - `gull` → Template literal alias
+  - `cook` → Template literal alias
 
 - **Type Safety**
   - `defineSchema()` for compile-time type checking

@@ -9,10 +9,10 @@ import { Token, TokenType } from './types.js';
 /**
  * Maps sqwind utility prefixes to token types
  *
- * Supports both OG syntax and Gen Alpha slang (no cap fr fr)
+ * Supports both classic syntax and Gen Alpha slang (no cap fr fr)
  */
 const TOKEN_MAP: Record<string, TokenType> = {
-  // ===== OG SYNTAX (for the boomers) =====
+  // ===== CLASSIC SYNTAX =====
   // SELECT tokens
   from: TokenType.FROM,
   sel: TokenType.SELECT,
